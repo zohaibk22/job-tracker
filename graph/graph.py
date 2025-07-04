@@ -23,7 +23,6 @@ class GraphState(TypedDict, total=False):
 
 def fetch_node(state) -> dict:
     print('**************************** IN FETCH NODE ****************************')
-    print(state, '------STATE IN FETCH NODE------')
     emails = fetch_today_emails()
 
     return {
@@ -35,7 +34,6 @@ def fetch_node(state) -> dict:
 
 def classify_node(state):
     print('**************************** IN CLASSIFY NODE ****************************')
-    print(state, '------STATE IN CLASSIFY NODE------')
     index = state["index"] or 0
     email = state["emails"][index]
 
@@ -50,9 +48,7 @@ def classify_node(state):
 
 def extract_node(state):
     print('**************************** IN EXTRACT NODE ****************************')
-    print(state, '------STATE IN EXTRACT NODE------')
     info = extract_email_content(state["email"])
-    print(info, '------EMAIL IN EXTRACT NODE------')
     # state["job_info"] = info  # update in-place
     state["job_info"] = info
     return state
@@ -60,7 +56,6 @@ def extract_node(state):
 def write_node(state):
     print('**************************** IN EXTRACT NODE ****************************')
     print(state, '------STATE IN WRITE NODE------')
-    print(state.get("email"), " STATE IN WRITE NODE")
     write_to_sheet({**state["job_info"], 'email_id': state.get("email_id"), "status": state['status']})
     return state
 
@@ -68,8 +63,6 @@ def write_next_node(state):
     print('**************************** IN WRITE NEXT NODE ****************************')
     print(state, '------STATE IN WRITE NEXT NODE------')
     next_index = state['index'] + 1
-    # state['index'] = next_index
-    # state['end_graph'] = next_index >= len(state['emails'])
     state['index'] = next_index
     state['end_graph'] = next_index >= len(state['emails'])
     return state
@@ -77,7 +70,6 @@ def write_next_node(state):
 
 def update_status_node(state):
     print('**************************** IN UPDATE STATUS NODE ****************************')
-    print(state, '------STATE IN UPDATE STATUS NODE------')
     update_status_agent(state['job_info'])
     return state
 
@@ -112,7 +104,6 @@ def build_graph():
     )
 
     graph.add_edge("update_status", "write_sheet")
-    # graph.add_edge("extract_info", "write_sheet")
     graph.add_edge("write_sheet", "write_next")
     graph.add_conditional_edges(
     "write_next",

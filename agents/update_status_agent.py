@@ -44,7 +44,7 @@ def update_status_agent(email_data):
             print(f"Updating status for {current_company_name} - {current_job_title}")
             # Update the status in the sheet
             try:
-                sheet.update_cell(i + 1, 4, "Updated")
+                sheet.update_cell(i + 1, 4, status)
             except gspread.exceptions.APIError as e:
                 print(f"❌ Error updating Google Sheet: {e}")
             break
