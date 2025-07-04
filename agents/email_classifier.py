@@ -26,7 +26,7 @@ def classify_email(email:dict) -> dict:
         result = json.loads(response.content)
       
     except Exception as e:
-        result = {"is_job_application": False, "reason": "Could not parse response"}
+        result = {"is_job_application": False, "reason": "Could not parse response", "status": "Unknown"}
 
 
     return result

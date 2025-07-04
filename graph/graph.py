@@ -1,3 +1,4 @@
+import operator
 from langgraph.graph import StateGraph, END
 from agents import fetch_today_emails
 from agents import classify_email
@@ -5,11 +6,12 @@ from agents import extract_email_content
 from agents import write_to_sheet
 from agents import update_status_agent
 from typing import TypedDict, Optional
+from typing_extensions import Annotated
 
 # Step 1: Define each LangGraph-compatible node
 
 class GraphState(TypedDict, total=False):
-    emails: list
+    emails: list # Annotated to handle multiple values
     email: dict
     email_id: Optional[str]  # Optional, if you want to track email IDs
     is_relevant: bool
@@ -20,45 +22,64 @@ class GraphState(TypedDict, total=False):
     status: str
 
 def fetch_node(state) -> dict:
+    print('**************************** IN FETCH NODE ****************************')
+    print(state, '------STATE IN FETCH NODE------')
     emails = fetch_today_emails()
-    return {"emails": emails, 'index': 0}
+
+    return {
+        **state,
+        "emails": emails,
+        "index": 0
+    }
 
 
 def classify_node(state):
-    # print(state, " STATE IN CLASSIFY NODE")
-    index = state["index"]
+    print('**************************** IN CLASSIFY NODE ****************************')
+    print(state, '------STATE IN CLASSIFY NODE------')
+    index = state["index"] or 0
     email = state["emails"][index]
+
     result = classify_email(email)
-    return {
-        "email": email,
-        "is_relevant": result["is_job_application"],
-        "reason": result["reason"],
-        "status": result["status"],
-        "email_id": email.get("id")  # Include email ID if needed
-    }
+
+    state["email"] = email
+    state["email_id"] = email.get("id")
+    state["is_relevant"] = result["is_job_application"]
+    state["reason"] = result["reason"]
+    state["status"] = result["status"]
+    return state
 
 def extract_node(state):
-    # print(state, " STATE IN EXTRACT NODE")
+    print('**************************** IN EXTRACT NODE ****************************')
+    print(state, '------STATE IN EXTRACT NODE------')
     info = extract_email_content(state["email"])
     print(info, '------EMAIL IN EXTRACT NODE------')
-    return {"email": state["email"], "job_info": info}
+    # state["job_info"] = info  # update in-place
+    state["job_info"] = info
+    return state
 
 def write_node(state):
+    print('**************************** IN EXTRACT NODE ****************************')
+    print(state, '------STATE IN WRITE NODE------')
     print(state.get("email"), " STATE IN WRITE NODE")
     write_to_sheet({**state["job_info"], 'email_id': state.get("email_id"), "status": state['status']})
-    return {}
+    return state
+
 def write_next_node(state):
-        # print(state, " STATE IN WRITE NEXT NODE")
-        next_index = state['index'] + 1
-        if next_index < len(state['emails']):
-            return {'index': next_index, 'end_graph': False}
-        else:
-            return {'end_graph': True}
+    print('**************************** IN WRITE NEXT NODE ****************************')
+    print(state, '------STATE IN WRITE NEXT NODE------')
+    next_index = state['index'] + 1
+    # state['index'] = next_index
+    # state['end_graph'] = next_index >= len(state['emails'])
+    state['index'] = next_index
+    state['end_graph'] = next_index >= len(state['emails'])
+    return state
         
 
 def update_status_node(state):
+    print('**************************** IN UPDATE STATUS NODE ****************************')
+    print(state, '------STATE IN UPDATE STATUS NODE------')
     update_status_agent(state['job_info'])
-    return {}
+    return state
 
 # Step 2: Build the graph
 def build_graph():
@@ -91,7 +112,7 @@ def build_graph():
     )
 
     graph.add_edge("update_status", "write_sheet")
-    graph.add_edge("extract_info", "write_sheet")
+    # graph.add_edge("extract_info", "write_sheet")
     graph.add_edge("write_sheet", "write_next")
     graph.add_conditional_edges(
     "write_next",

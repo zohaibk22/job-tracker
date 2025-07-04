@@ -36,10 +36,16 @@ def main():
     #     print(info, "-----info-----")
     #     write_to_sheet(info)
     graph = build_graph()
-    graph.invoke({})
-    
-       
+    graph.invoke({
+    }, {"recursion_limit": 100})
 
 
 if __name__ == "__main__":
     main()
+
+ 
+       
+
+
+# if __name__ == "__main__":
+#     main()

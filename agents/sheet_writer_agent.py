@@ -39,7 +39,7 @@ def write_to_sheet(email_data: dict) -> None:
         - Prepares a row with the date, company, and job title.
         - Appends the row to the sheet using 'USER_ENTERED' value input option.
     """
-    print("IN EXTRACT EMAIL CONTENT 🚀")
+    print("IN GOOGLE SHEETS INPUT AGENT 🚀")
     client = init_sheet_client()
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
