@@ -3,33 +3,31 @@ from datetime import datetime, timedelta
 import base64
 import email
 
-
 def get_today_date_query():
     today = datetime.today()
     tomorrow = today.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    # Gmail query: after today 00:00, before tomorrow 00:00
     return f"category:primary in:inbox after:{today.strftime('%Y/%m/%d')} before:{tomorrow.strftime('%Y/%m/%d')}"
 
-def fetch_today_emails(max_results=10):
+def fetch_today_emails(max_results=200):
     service = get_gmail_service()
     query = get_today_date_query()
     print(f"Querying emails with query: {query}")
 
     results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=query, maxResults=max_results).execute()
-    # print(results, "-----results-----")
+    
     messages = results.get('messages', [])
-    print(len(messages), "-----messages-----")
+    print(messages, '------MESSAGES------')
     emails = []
 
     for msg in messages:
         msg_data = service.users().messages().get(userId='me', id=msg['id'], format='full').execute()
-
-        # print(msg_data, "-----msg_data-----")
-        print("Email ID:", msg_data.get("id"))
+        print("Email ID:", msg_data)
         headers = msg_data['payload']['headers']
 
         subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '')
         sender = next((h['value'] for h in headers if h['name'] == 'From'), '')
-        date = next((h['value'] for h in headers if h['name'] == "Date"), '')
+        date = next((h['value'] for h in headers if h['name'] == "Date"), datetime.today())
 
         body = ''
 
