@@ -1,6 +1,7 @@
 
 from dotenv import load_dotenv
 from graph import build_graph
+from publisher import EventPublisher
 import redis
 
 def main():
@@ -15,5 +16,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    publisher = EventPublisher('email_notifications_channel')
+    publisher.publish('Job 123 completed')  
 
  
