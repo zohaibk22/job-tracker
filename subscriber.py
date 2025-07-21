@@ -1,7 +1,7 @@
 import redis
 
-def send_email_notification(message):
-    print(f"Sending email notification: {message}")
+# def send_email_notification(message):
+#     print(f"Sending email notification: {message}")
           
 
 
@@ -21,4 +21,4 @@ class RedisSubscriber:
         for message in self.pubsub.listen():
             if message['type'] == 'message':
                 print(f"Received message: {message['data']}")
-                send_email_notification(message['data'].decode('utf-8'))
+                self.handle_message(message['data'].decode('utf-8'))
