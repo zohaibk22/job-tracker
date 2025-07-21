@@ -62,6 +62,7 @@ def write_to_sheet(email_data: dict) -> None:
     try:
      
         sheet.append_row(row, value_input_option='USER_ENTERED')
+        return f"applied to {email_data.get('company', '')} - {email_data.get('job_title', '')}"
 
     except gspread.exceptions.APIError as e:
         print(f"❌ Error writing to Google Sheet: {e}")
