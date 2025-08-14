@@ -60,7 +60,6 @@ def extract_node(state):
 
 def write_node(state):
     print('**************************** IN EXTRACT NODE ****************************')
-    print(state, '------STATE IN WRITE NODE------')
     job_details = write_to_sheet({**state["job_info"], 'email_id': state.get("email_id"), "status": state['status']})
     if "parsed_email_list" not in state or state["parsed_email_list"] is None:
         state["parsed_email_list"] = []
@@ -69,7 +68,7 @@ def write_node(state):
 
 def write_next_node(state):
     print('**************************** IN WRITE NEXT NODE ****************************')
-    print(state, '------STATE IN WRITE NEXT NODE------')
+
     next_index = state['index'] + 1
     state['index'] = next_index
     state['end_graph'] = next_index >= len(state['emails'])
@@ -89,6 +88,9 @@ def publish_results(state):
     # Here you would implement the logic to publish the results
     # For example, sending an email or updating a dashboard
     publisher = EventPublisher('email_notifications_channel')
+    if 'parsed_email_list' not in state or state['parsed_email_list'] is None:
+        state['parsed_email_list'] = []
+    print(state['parsed_email_list'], "----state['parsed_email_list']----")
     publisher.publish(json.dumps(state['parsed_email_list']))
     return state
 

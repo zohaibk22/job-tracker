@@ -20,7 +20,6 @@ def init_sheet_client():
 def is_duplicate(message_id: str, sheet) -> bool:
 
     id_col = sheet.col_values(5)
-    print(id_col, "-----ID COL-----")
     return message_id in id_col
 
 
@@ -39,13 +38,11 @@ def write_to_sheet(email_data: dict) -> None:
         - Prepares a row with the date, company, and job title.
         - Appends the row to the sheet using 'USER_ENTERED' value input option.
     """
-    print("IN GOOGLE SHEETS INPUT AGENT 🚀")
     client = init_sheet_client()
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
     email_id: str = email_data.get('email_id', '')
     if is_duplicate(email_id, sheet):
-        print(f"Email with ID {email_id} already exists in the sheet. Skipping write.")
         return
 
     date_str: str = email_data.get('submission_date') or datetime.now().date().isoformat()
@@ -56,9 +53,6 @@ def write_to_sheet(email_data: dict) -> None:
         email_data.get('status', 'test'),  # Default to 'New' if status is not provided
         email_id  # Include email ID if needed
     ]
-
-    print(f"--------------📄 Writing to Google Sheet: {row} -------------")
-
     try:
      
         sheet.append_row(row, value_input_option='USER_ENTERED')

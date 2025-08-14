@@ -22,7 +22,6 @@ def update_status_agent(email_data):
         - Prepares a row with the date, company, job title, and email ID.
         - Appends the row to the sheet using 'USER_ENTERED' value input option.
     """
-    print("IN UPDATE STATUS AGENT 🚀")
 
     client = init_sheet_client()
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)

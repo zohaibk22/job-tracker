@@ -8,7 +8,6 @@ load_dotenv()
 llm = ChatOpenAI(model="gpt-4o", temperature=0.0)
 
 def classify_email(email:dict) -> dict:
-    print("IN CLASSIFY EMAIL CONTENT 🚀")
     subject = email.get("subject", "")
     body = email.get("body", "")[:1000]
 
@@ -21,7 +20,6 @@ def classify_email(email:dict) -> dict:
     user_msg = HumanMessage(content=f"Subject: {subject}\n\nBody: {body}")
     
     response = llm.invoke([system_msg, user_msg])
-    print(f"Response: {response.content} --------------------------")
     try:
         result = json.loads(response.content)
       
