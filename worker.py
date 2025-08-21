@@ -5,12 +5,10 @@ import time
 from datetime import datetime as dt
 
 
-
-load_dotenv()
-
-
 from subscriber import RedisSubscriber
 import traceback
+load_dotenv()
+
 class EmailNotificationSubscriber(RedisSubscriber):
 
     def handle_message(self, message):
