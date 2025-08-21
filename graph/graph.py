@@ -129,7 +129,7 @@ def build_graph():
     graph.add_edge("write_sheet", "write_next")
     graph.add_conditional_edges(
     "write_next",
-    lambda state: "classify_email" if not state['end_graph'] else publish_results(state)
+    lambda state: "classify_email" if not state['end_graph'] else 'publish_results'
     )
     graph.add_edge('publish_results', END)
 

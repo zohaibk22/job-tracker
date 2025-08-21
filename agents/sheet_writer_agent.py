@@ -2,6 +2,7 @@ import os
 import gspread
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
+import time
 
 
 SCOPE=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -37,7 +38,9 @@ def write_to_sheet(email_data: dict) -> None:
         - Extracts the submission date from email_data or uses the current date if not provided.
         - Prepares a row with the date, company, and job title.
         - Appends the row to the sheet using 'USER_ENTERED' value input option.
+        
     """
+    time.sleep(1)
     client = init_sheet_client()
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 

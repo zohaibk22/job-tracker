@@ -7,7 +7,7 @@ def main():
 
     graph = build_graph()
     graph.invoke({
-    }, {"recursion_limit": 100})
+    }, {"recursion_limit": 200})
 
 if __name__ == "__main__":
     main()
