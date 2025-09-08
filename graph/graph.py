@@ -29,6 +29,7 @@ class GraphState(TypedDict, total=False):
 def fetch_node(state) -> dict:
     print('**************************** IN FETCH NODE ****************************')
     emails = fetch_today_emails()
+    print(f"Fetched {len(emails)} emails.")
 
     return {
         **state,
@@ -109,6 +110,7 @@ def build_graph():
 
     # Entry point
     graph.set_entry_point("fetch_emails")
+    graph.add_conditional_edges("fetch_emails", lambda state: "classify_email" if len(state["emails"]) > 0 else 'publish_results')
 
     graph.add_edge("fetch_emails", "classify_email")
 
