@@ -1,0 +1,25 @@
+
+services:
+  gmail_tool:
+    build: ./langgraph
+    container_name: gmail_tool
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - redis
+      - redis-sub
+
+    command: python main.py
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+
+  redis-sub:
+    build: ./sub
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python main.py
+    
