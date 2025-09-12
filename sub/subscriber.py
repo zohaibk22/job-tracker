@@ -1,14 +1,12 @@
 import redis
-
-# def send_email_notification(message):
-#     print(f"Sending email notification: {message}")
-          
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 class RedisSubscriber:
     def __init__(self, channel):
         self.channel = channel
-        self.redis = redis.Redis(host='localhost', port=6379, db=0)
+        self.redis = redis.Redis.from_url(os.getenv("REDIS_URL"))
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(self.channel)
 

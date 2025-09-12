@@ -4,22 +4,33 @@ services:
     build: ./langgraph
     container_name: gmail_tool
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: 1
+      REDIS_URL: redis://redis:6379/0
     depends_on:
-      - redis
-      - redis-sub
-
+      redis:
+        condition: service_healthy
     command: python main.py
 
   redis:
     image: redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
 
 
   redis-sub:
     build: ./sub
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: 1
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
     command: python main.py
+    restart: unless-stopped
     

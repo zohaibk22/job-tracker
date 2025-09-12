@@ -18,12 +18,12 @@ def get_today_date_query():
     return f"category:primary in:inbox after:{today} before:{tomorrow}"
 
 
-def fetch_today_emails(max_results=200):
+def fetch_today_emails(max_results=10):
     service = get_gmail_service()
     query = get_today_date_query()
     print(f"Querying emails with query: {query}")
 
-    results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=query, maxResults=max_results).execute()
+    results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=query, maxResults=10).execute()
     
     messages = results.get('messages', [])
     emails = []

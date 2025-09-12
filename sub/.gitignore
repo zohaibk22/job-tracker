@@ -1,1 +1,8 @@
 **.env
+__pycache__/
+.qodo
+.vscode/
+.DS_Store
+*.pyc
+*.pyo
+*.pyd

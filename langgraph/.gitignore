@@ -12,3 +12,10 @@
 .env
 *.env
 /credentials/**
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
