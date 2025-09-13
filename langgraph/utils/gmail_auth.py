@@ -19,7 +19,6 @@ def get_gmail_service():
 
     if not creds or not creds.valid:
         try:
-
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
