@@ -27,6 +27,13 @@ jobs:
         run: docker compose -f docker-compose.yml -f compose.ci.yml build
 
       # A) Usually you only need runner + redis
+      - name: Check OPENAI_API_KEY present
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "OPENAI_API_KEY missing"; exit 1
+          else
+            echo "OPENAI_API_KEY is set"
+          fi
       - name: Run daily job (runner + redis)
         run: |
           docker compose -f docker-compose.yml -f compose.ci.yml up \
