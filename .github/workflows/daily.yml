@@ -52,18 +52,19 @@ jobs:
           echo ".env created with keys:"
           cat .env | sed -n '1,10p'
 
+      - name: Prepare credentials dir
+        run: mkdir -p credentials
+
       - name: Create Google service account file (if provided)
         run: |
-          if [ -n "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" ]; then
-            echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > /tmp/service_account.json
-            mkdir -p credentials
-            cp /tmp/service_account.json credentials/service_account.json
+          if [ -n "${GOOGLE_SERVICE_ACCOUNT_JSON}" ]; then
+            printf '%s' "${GOOGLE_SERVICE_ACCOUNT_JSON}" > credentials/service_account.json
           fi
 
-      - name: Decode Gmail token (optional)
+      - name: Decode Gmail token (if provided)
         run: |
-          if [ -n "${{ secrets.GMAIL_TOKEN_PKL_BASE64 }}" ]; then
-            echo '${{ secrets.GMAIL_TOKEN_PKL_BASE64 }}' | base64 -d > credentials/token.pkl
+          if [ -n "${GMAIL_TOKEN_PKL_BASE64}" ]; then
+            printf '%s' "${GMAIL_TOKEN_PKL_BASE64}" | base64 -d > credentials/token.pkl
           fi
 
       - name: Setup Docker Buildx
@@ -76,13 +77,13 @@ jobs:
         run: |
           docker compose -f docker-compose.yml -f compose.ci.yml up \
             --abort-on-container-exit --exit-code-from gmail_tool \
-            gmail_tool redis_sub redis
+            gmail_tool redis-sub redis
 
       - name: Show logs on failure
         if: failure()
         run: |
           docker compose -f docker-compose.yml -f compose.ci.yml logs gmail_tool || true
-          docker compose -f docker-compose.yml -f compose.ci.yml logs redis_sub || true
+          docker compose -f docker-compose.yml -f compose.ci.yml logs redis-sub || true
           docker compose -f docker-compose.yml -f compose.ci.yml logs redis || true
 
       - name: Cleanup
