@@ -53,7 +53,7 @@ jobs:
         run: |
           docker compose -f docker-compose.yml -f compose.ci.yml up \
             --abort-on-container-exit --exit-code-from gmail_tool \
-            gmail_tool redis_sub redis
+            gmail_tool redis-sub redis
 
       - name: Show logs on failure
         if: failure()
