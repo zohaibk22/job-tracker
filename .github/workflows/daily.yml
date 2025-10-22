@@ -10,16 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      # values come from repository Secrets
+      # keep available to runner steps
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
       LANGSMITH_TRACING: ${{ secrets.LANGSMITH_TRACING }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
       GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
       GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
       REDIS_URL: ${{ secrets.REDIS_URL }}
-      # optional more secrets
       GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
       GMAIL_TOKEN_PKL_BASE64: ${{ secrets.GMAIL_TOKEN_PKL_BASE64 }}
       GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
@@ -28,6 +27,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Fail if OPENAI_API_KEY missing
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "ERROR: OPENAI_API_KEY is not set. Add it to repo Secrets."
+            exit 1
+          fi
+
+      - name: Write .env for docker-compose
+        run: |
+          cat > .env <<EOF
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+          LANGSMITH_TRACING=${LANGSMITH_TRACING}
+          ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+          GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+          GOOGLE_SHEET_NAME=${GOOGLE_SHEET_NAME}
+          GOOGLE_SHEETS_CREDENTIALS=${GOOGLE_SHEETS_CREDENTIALS}
+          REDIS_URL=${REDIS_URL}
+          EOF
+          # show just the keys for debugging
+          echo ".env created with keys:"
+          cat .env | sed -n '1,10p'
 
       - name: Create Google service account file (if provided)
         run: |
@@ -49,11 +71,11 @@ jobs:
       - name: Build images
         run: docker compose -f docker-compose.yml -f compose.ci.yml build
 
-      - name: Run services (gmail_tool + redis + subscriber)
+      - name: Run services (gmail_tool + redis_sub + redis)
         run: |
           docker compose -f docker-compose.yml -f compose.ci.yml up \
             --abort-on-container-exit --exit-code-from gmail_tool \
-            gmail_tool redis-sub redis
+            gmail_tool redis_sub redis
 
       - name: Show logs on failure
         if: failure()
@@ -66,4 +88,4 @@ jobs:
         if: always()
         run: |
           docker compose -f docker-compose.yml -f compose.ci.yml down -v || true
-          rm -f credentials/service_account.json credentials/token.pkl /tmp/service_account.json || true
+          rm -f credentials/service_account.json credentials/token.pkl /tmp/service_account.json .env || true
