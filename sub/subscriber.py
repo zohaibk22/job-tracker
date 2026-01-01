@@ -1,15 +1,18 @@
 import redis
+from abc import ABC, abstractmethod
+
 from dotenv import load_dotenv
 import os
 load_dotenv()
 
-class RedisSubscriber:
+class RedisSubscriber(ABC):
     def __init__(self, channel):
         self.channel = channel
-        self.redis = redis.Redis.from_url(os.getenv("REDIS_URL"))
+        self.redis = redis.Redis.from_url(os.getenv("REDIS_URL", 'redis://localhost:6379/0'))
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(self.channel)
 
+    @abstractmethod
     def handle_message(self, message):
         """Override this method for custom logic."""
         print(f"Custom handling of message: {message}")

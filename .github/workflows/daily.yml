@@ -55,6 +55,15 @@ jobs:
       - name: Prepare credentials dir
         run: mkdir -p credentials
 
+      - name: Create Google OAuth client file (credentials.json) if provided
+        run: |
+          if [ -n "${GOOGLE_CREDENTIALS_JSON}" ]; then
+            printf '%s' "${GOOGLE_CREDENTIALS_JSON}" > credentials/credentials.json
+            echo "credentials/credentials.json written"
+          else
+            echo "GOOGLE_CREDENTIALS_JSON is empty. OAuth re-auth will fail if token refresh is needed."
+          fi
+
       - name: Create Google service account file (if provided)
         run: |
           if [ -n "${GOOGLE_SERVICE_ACCOUNT_JSON}" ]; then
