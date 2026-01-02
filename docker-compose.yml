@@ -16,7 +16,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    command: python main.py
+    command: ["bash", "-lc", "python run_daily.py && python main.py"]
     restart: "no"
 
   redis:

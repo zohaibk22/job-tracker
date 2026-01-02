@@ -10,8 +10,8 @@ from google.auth.exceptions import RefreshError
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 def get_gmail_service():
     creds = None
-    token_path=pathlib.Path("credentials/token.pkl")
-    credentials_path = pathlib.Path("credentials/credentials.json")
+    token_path=pathlib.Path(os.getenv("TOKEN_PATH", "credentials/token.pkl"))
+    credentials_path = pathlib.Path(os.getenv("CREDS_PATH", "credentials/credentials.json"))
 
     if token_path.exists():
         with token_path.open('rb') as token:
