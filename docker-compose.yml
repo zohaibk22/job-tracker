@@ -3,6 +3,8 @@ services:
   gmail_tool:
     build: ./langgraph
     container_name: gmail_tool
+    volumes:
+    - ./credentials:/app/credentials:ro
     environment:
       PYTHONUNBUFFERED: 1
       REDIS_URL: redis://redis:6379/0
