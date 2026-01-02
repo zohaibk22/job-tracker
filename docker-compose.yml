@@ -40,6 +40,9 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
       REDIS_URL: redis://redis:6379/0
+      SENDER_EMAIL:  ${SENDER_EMAIL}
+      SENDER_EMAIL_PASSWORD: ${SENDER_EMAIL_PASSWORD}
+      RECEIVER_EMAIL: ${RECEIVER_EMAIL}
     depends_on:
       redis:
         condition: service_healthy
