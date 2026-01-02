@@ -24,6 +24,10 @@ jobs:
       GMAIL_TOKEN_PKL_BASE64: ${{ secrets.GMAIL_TOKEN_PKL_BASE64 }}
       GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
       GMAIL_TOKEN_JSON: ${{ secrets.GMAIL_TOKEN_JSON }}
+      SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+      RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+      SENDER_EMAIL_PASSWORD: ${{ secrets.SENDER_EMAIL_PASSWORD }}
+
 
     steps:
       - name: Checkout
