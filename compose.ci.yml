@@ -13,7 +13,7 @@ services:
       GMAIL_TOKEN_PKL_BASE64: ${GMAIL_TOKEN_PKL_BASE64}
       GOOGLE_SERVICE_ACCOUNT_JSON: ${GOOGLE_SERVICE_ACCOUNT_JSON}
     volumes:
-    - ./credentials:/app/credentials:ro
+    - ./credentials:/app/credentials:rw
 
     depends_on:
       redis:
