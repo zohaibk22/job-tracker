@@ -2,7 +2,7 @@ import os
 import gspread
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
-import time
+from typing import Optional
 
 
 SCOPE=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -24,13 +24,14 @@ def is_duplicate(message_id: str, sheet) -> bool:
     return message_id in id_col
 
 
-def write_to_sheet(email_data: dict) -> None:
+def write_to_sheet(email_data: dict, sheet_data_cache: Optional[dict] = None) -> str:
     """
     Writes email data to a Google Sheet.
 
     Args:
         email_data (dict): A dictionary containing email information. Expected keys include
             'submission_date', 'company', and 'job_title'.
+        sheet_data_cache (dict): Optional cached sheet data to avoid redundant API calls.
 
     Functionality:
         - Initializes a Google Sheets client.
@@ -40,13 +41,16 @@ def write_to_sheet(email_data: dict) -> None:
         - Appends the row to the sheet using 'USER_ENTERED' value input option.
         
     """
-    time.sleep(1)
     client = init_sheet_client()
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
     email_id: str = email_data.get('email_id', '')
-    if is_duplicate(email_id, sheet):
-        return
+    
+    # Use cached data if available, otherwise check sheet
+    if sheet_data_cache and email_id in sheet_data_cache.get('email_ids', set()):
+        return f"Duplicate: {email_data.get('company', '')} - {email_data.get('job_title', '')}"
+    elif not sheet_data_cache and is_duplicate(email_id, sheet):
+        return f"Duplicate: {email_data.get('company', '')} - {email_data.get('job_title', '')}"
 
     date_str: str = email_data.get('submission_date') or datetime.now().date().isoformat()
     row: list = [

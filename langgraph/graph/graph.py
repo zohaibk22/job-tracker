@@ -25,64 +25,119 @@ class GraphState(TypedDict, total=False):
     status: str
     parsed_email: str
     parsed_email_list: list
+    sheet_data_cache: dict  # Cache for sheet data to avoid repeated API calls
 
 def fetch_node(state) -> dict:
     print('**************************** IN FETCH NODE ****************************')
     emails = fetch_today_emails()
     print(f"Fetched {len(emails)} emails.")
 
+    # Build sheet data cache once at the start
+    from utils import init_sheet_client
+    import os
+    
+    SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
+    SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Sheet1")
+    
+    try:
+        client = init_sheet_client()
+        sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+        
+        # Load all data once
+        email_ids = set(sheet.col_values(5))  # Column 5 has email IDs
+        company_names = sheet.col_values(2)   # Column 2 has companies
+        positions = sheet.col_values(3)       # Column 3 has job titles
+        
+        # Build O(1) lookup dictionary: (company, title) -> row_index
+        row_lookup = {}
+        for i in range(len(company_names)):
+            if i < len(positions):  # Safety check
+                key = (company_names[i], positions[i])
+                row_lookup[key] = i + 1  # 1-indexed for sheet API
+        
+        sheet_data_cache = {
+            'email_ids': email_ids,
+            'row_lookup': row_lookup
+        }
+        print(f"Built sheet cache with {len(email_ids)} email IDs and {len(row_lookup)} entries")
+    except Exception as e:
+        print(f"Warning: Could not build sheet cache: {e}")
+        sheet_data_cache = {'email_ids': set(), 'row_lookup': {}}
+
     return {
         **state,
         "emails": emails,
-        "index": 0
+        "index": 0,
+        "sheet_data_cache": sheet_data_cache
     }
 
 
 def classify_node(state):
     print('**************************** IN CLASSIFY NODE ****************************')
-    index = state["index"] or 0
+    index = state.get("index", 0)
     email = state["emails"][index]
 
     result = classify_email(email)
 
-    state["email"] = email
-    state["email_id"] = email.get("id")
-    state["is_relevant"] = result["is_job_application"]
-    state["reason"] = result["reason"]
-    state["status"] = result["status"]
-    return state
+    return {
+        **state,
+        "email": email,
+        "email_id": email.get("id"),
+        "is_relevant": result["is_job_application"],
+        "reason": result["reason"],
+        "status": result["status"]
+    }
 
 def extract_node(state):
     print('**************************** IN EXTRACT NODE ****************************')
     info = extract_email_content(state["email"])
-    # state["job_info"] = info  # update in-place
-    state["job_info"] = info
-    return state
+    return {
+        **state,
+        "job_info": info
+    }
 
 def write_node(state):
-    print('**************************** IN EXTRACT NODE ****************************')
-    job_details = write_to_sheet({**state["job_info"], 'email_id': state.get("email_id"), "status": state['status']})
-    if "parsed_email_list" not in state or state["parsed_email_list"] is None:
-        state["parsed_email_list"] = []
-    state["parsed_email_list"].append(job_details)
-    return state
+    print('**************************** IN WRITE NODE ****************************')
+    sheet_cache = state.get('sheet_data_cache', None)
+    job_details = write_to_sheet(
+        {**state["job_info"], 'email_id': state.get("email_id"), "status": state['status']},
+        sheet_data_cache=sheet_cache
+    )
+    parsed_list = state.get("parsed_email_list", [])
+    if parsed_list is None:
+        parsed_list = []
+    
+    return {
+        **state,
+        "parsed_email_list": parsed_list + [job_details]
+    }
 
 def write_next_node(state):
     print('**************************** IN WRITE NEXT NODE ****************************')
-
     next_index = state['index'] + 1
-    state['index'] = next_index
-    state['end_graph'] = next_index >= len(state['emails'])
-    return state
+    end_graph = next_index >= len(state['emails'])
+    
+    return {
+        **state,
+        'index': next_index,
+        'end_graph': end_graph
+    }
         
 
 def update_status_node(state):
     print('**************************** IN UPDATE STATUS NODE ****************************')
-    publish_data = update_status_agent(state['job_info'])
-    if "parsed_email_list" not in state or state["parsed_email_list"] is None:
-        state["parsed_email_list"] = []
-    state['parsed_email_list'].append(publish_data)
-    return state
+    sheet_cache = state.get('sheet_data_cache', None)
+    publish_data = update_status_agent(state['job_info'], sheet_data_cache=sheet_cache)
+    print(f"Update Status Result: {publish_data}")
+    
+    parsed_list = state.get("parsed_email_list", [])
+    if parsed_list is None:
+        parsed_list = []
+    
+    return {
+        **state,
+        'parsed_email_list': parsed_list + [publish_data]
+    }
 
 def publish_results(state):
     print('**************************** IN PUBLISH RESULTS NODE ****************************')
@@ -92,6 +147,9 @@ def publish_results(state):
     if 'parsed_email_list' not in state or state['parsed_email_list'] is None:
         state['parsed_email_list'] = []
     print(state['parsed_email_list'], "----state['parsed_email_list']----")
+    print(len(state['emails']), "----len(state['emails'])----")
+    if len(state['parsed_email_list']) == 0:
+        publisher.publish(json.dumps([{"message": "No emails found today."}]))
     publisher.publish(json.dumps(state['parsed_email_list']))
     return state
 
@@ -112,7 +170,6 @@ def build_graph():
     graph.set_entry_point("fetch_emails")
     graph.add_conditional_edges("fetch_emails", lambda state: "classify_email" if len(state["emails"]) > 0 else 'publish_results')
 
-    graph.add_edge("fetch_emails", "classify_email")
 
     # The graph processes one email at a time by using the 'index' to track the current email.
     # After processing (classify -> extract -> write), it increments 'index' and loops back if more emails remain.

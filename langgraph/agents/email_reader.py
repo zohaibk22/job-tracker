@@ -26,6 +26,9 @@ def fetch_today_emails(max_results=10):
     results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=query, maxResults=10).execute()
     
     messages = results.get('messages', [])
+    if not messages:
+        return []
+    
     emails = []
 
     for msg in messages:
