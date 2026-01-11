@@ -3,6 +3,9 @@ from utils import init_sheet_client
 import os 
 import gspread
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -36,12 +39,12 @@ def update_status_agent(email_data, sheet_data_cache: Optional[dict] = None):
         if row_index:
             client = init_sheet_client()
             sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
-            print(f"Updating status for {current_company_name} - {current_job_title}")
+            logger.info(f"Updating status for {current_company_name} - {current_job_title}")
             try:
                 sheet.update_cell(row_index, 4, status)
                 return f"Status updated for {current_company_name} - {current_job_title} to {status}"
             except gspread.exceptions.APIError as e:
-                print(f"❌ Error updating Google Sheet: {e}")
+                logger.error(f"❌ Error updating Google Sheet: {e}")
                 return f"Error updating {current_company_name} - {current_job_title}"
         return f"No matching row found for {current_company_name} - {current_job_title}"
     
@@ -56,12 +59,12 @@ def update_status_agent(email_data, sheet_data_cache: Optional[dict] = None):
         curr_val = company_names[i]
         curr_pos = positions[i]
         if curr_val == current_company_name and curr_pos == current_job_title:
-            print(f"Updating status for {current_company_name} - {current_job_title}")
+            logger.info(f"Updating status for {current_company_name} - {current_job_title}")
             try:
                 sheet.update_cell(i + 1, 4, status)
                 return f"Status updated for {current_company_name} - {current_job_title} to {status}"
             except gspread.exceptions.APIError as e:
-                print(f"❌ Error updating Google Sheet: {e}")
+                logger.error(f"❌ Error updating Google Sheet: {e}")
             break
 
     

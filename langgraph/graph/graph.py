@@ -13,6 +13,9 @@ from publisher import EventPublisher
 
 from utils import init_sheet_client
 import os
+import logging
+
+logger = logging.getLogger(__name__)
     
 
 # Step 1: Define each LangGraph-compatible node
@@ -32,9 +35,9 @@ class GraphState(TypedDict, total=False):
     sheet_data_cache: dict  # Cache for sheet data to avoid repeated API calls
 
 def fetch_node(state) -> dict:
-    print('**************************** IN FETCH NODE ****************************')
+    logger.info('**************************** IN FETCH NODE ****************************')
     emails = fetch_today_emails()
-    print(f"Fetched {len(emails)} emails.")
+    logger.info(f"Fetched {len(emails)} emails.")
 
     # Build sheet data cache once at the start
   
@@ -50,20 +53,20 @@ def fetch_node(state) -> dict:
         company_names = sheet.col_values(2)   # Column 2 has companies
         positions = sheet.col_values(3)       # Column 3 has job titles
         
-        # Build O(1) lookup dictionary: (company, title) -> row_index
+        # Build O(1) lookup dictionary: "company|title" -> row_index
         row_lookup = {}
         for i in range(len(company_names)):
             if i < len(positions):  # Safety check
-                key = (company_names[i], positions[i])
+                key = f"{company_names[i]}|{positions[i]}"  # String key instead of tuple
                 row_lookup[key] = i + 1  # 1-indexed for sheet API
         
         sheet_data_cache = {
             'email_ids': email_ids,
             'row_lookup': row_lookup
         }
-        print(f"Built sheet cache with {len(email_ids)} email IDs and {len(row_lookup)} entries")
+        logger.info(f"Built sheet cache with {len(email_ids)} email IDs and {len(row_lookup)} entries")
     except Exception as e:
-        print(f"Warning: Could not build sheet cache: {e}")
+        logger.error(f"Warning: Could not build sheet cache: {e}")
         sheet_data_cache = {'email_ids': set(), 'row_lookup': {}}
 
     return {
@@ -75,11 +78,13 @@ def fetch_node(state) -> dict:
 
 
 def classify_node(state):
-    print('**************************** IN CLASSIFY NODE ****************************')
+    logger.info('**************************** IN CLASSIFY NODE ****************************')
     index = state.get("index", 0)
     email = state["emails"][index]
 
     result = classify_email(email)
+
+    logger.info(f"CLASSIFY NODE RESULT: {result}")
 
     return {
         **state,
@@ -91,7 +96,7 @@ def classify_node(state):
     }
 
 def extract_node(state):
-    print('**************************** IN EXTRACT NODE ****************************')
+    logger.info('**************************** IN EXTRACT NODE ****************************')
     info = extract_email_content(state["email"])
     return {
         **state,
@@ -99,7 +104,7 @@ def extract_node(state):
     }
 
 def write_node(state):
-    print('**************************** IN WRITE NODE ****************************')
+    logger.info('**************************** IN WRITE NODE ****************************')
     sheet_cache = state.get('sheet_data_cache', None)
     job_details = write_to_sheet(
         {**state["job_info"], 'email_id': state.get("email_id"), "status": state['status']},
@@ -115,7 +120,7 @@ def write_node(state):
     }
 
 def write_next_node(state):
-    print('**************************** IN WRITE NEXT NODE ****************************')
+    logger.info('**************************** IN WRITE NEXT NODE ****************************')
     next_index = state['index'] + 1
     end_graph = next_index >= len(state['emails'])
     
@@ -127,10 +132,10 @@ def write_next_node(state):
         
 
 def update_status_node(state):
-    print('**************************** IN UPDATE STATUS NODE ****************************')
+    logger.info('**************************** IN UPDATE STATUS NODE ****************************')
     sheet_cache = state.get('sheet_data_cache', None)
     publish_data = update_status_agent(state['job_info'], sheet_data_cache=sheet_cache)
-    print(f"Update Status Result: {publish_data}")
+    logger.info(f"Update Status Result: {publish_data}")
     
     parsed_list = state.get("parsed_email_list", [])
     if parsed_list is None:
@@ -142,14 +147,14 @@ def update_status_node(state):
     }
 
 def publish_results(state):
-    print('**************************** IN PUBLISH RESULTS NODE ****************************')
+    logger.info('**************************** IN PUBLISH RESULTS NODE ****************************')
     # Here you would implement the logic to publish the results
     # For example, sending an email or updating a dashboard
     publisher = EventPublisher('email_notifications_channel')
     if 'parsed_email_list' not in state or state['parsed_email_list'] is None:
         state['parsed_email_list'] = []
-    print(state['parsed_email_list'], "----state['parsed_email_list']----")
-    print(len(state['emails']), "----len(state['emails'])----")
+    logger.info(f"parsed_email_list: {state['parsed_email_list']}")
+    logger.info(f"Total emails: {len(state['emails'])}")
     if len(state['parsed_email_list']) == 0:
         publisher.publish(json.dumps([{"message": "No emails found today."}]))
     publisher.publish(json.dumps(state['parsed_email_list']))

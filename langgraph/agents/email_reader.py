@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 import base64
 import email
 from zoneinfo import ZoneInfo
+import logging
+
+logger = logging.getLogger(__name__)
 
 NY = ZoneInfo("America/New_York")
 
@@ -18,10 +21,10 @@ def get_today_date_query():
     return f"category:primary in:inbox after:{today} before:{tomorrow}"
 
 
-def fetch_today_emails(max_results=1000):
+def fetch_today_emails(max_results=5) -> list:
     service = get_gmail_service()
     query = get_today_date_query()
-    print(f"Querying emails with query: {query}")
+    logger.info(f"Querying emails with query: {query}")
 
     results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=query, maxResults=max_results).execute()
     

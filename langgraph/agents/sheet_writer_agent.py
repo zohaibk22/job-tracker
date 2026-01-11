@@ -3,6 +3,9 @@ import gspread
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 SCOPE=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -66,5 +69,5 @@ def write_to_sheet(email_data: dict, sheet_data_cache: Optional[dict] = None) ->
         return f"applied to {email_data.get('company', '')} - {email_data.get('job_title', '')}"
 
     except gspread.exceptions.APIError as e:
-        print(f"❌ Error writing to Google Sheet: {e}")
+        logger.error(f"❌ Error writing to Google Sheet: {e}")
         raise e

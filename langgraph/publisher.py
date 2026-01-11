@@ -1,6 +1,9 @@
 import redis
 from dotenv import load_dotenv
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class EventPublisher:
     def __init__(self, channel):
@@ -9,5 +12,5 @@ class EventPublisher:
 
     def publish(self, message):
         self.redis.publish(self.channel, message)
-        print(f"[PUBLISH] {message} -> {self.channel}")
+        logger.info(f"[PUBLISH] {message} -> {self.channel}")
         

@@ -2,6 +2,9 @@ import json
 from langchain_openai import ChatOpenAI
 
 from langchain.schema import SystemMessage, HumanMessage
+import logging
+
+logger = logging.getLogger(__name__)
 
 llm = ChatOpenAI(model="gpt-4o", temperature=0.0)
 
@@ -57,6 +60,7 @@ def extract_email_content(email: dict) -> dict:
     content = response.content.strip()
 
     try:
+        logger.info(f"EXTRACTOR RESPONSE CONTENT: {content}")
         data = json.loads(content)
     except json.JSONDecodeError:
         data = {"company": "unknown", "job_title": "Software Engineer", "submission_date": date, }
