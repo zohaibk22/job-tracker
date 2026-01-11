@@ -13,15 +13,37 @@ def extract_email_content(email: dict) -> dict:
     date = email.get('date', '')
 
 
+    
     system_msg = SystemMessage(content=(
         """
-            1. You are an AI assistant that extracts structured job application details from an email. 
-            Given the subject and body, return ONLY JSON with the following keys: 
-            "company", "job_title", "submission_date"
-            2. The "submission_date" should be extracted from the email if present; otherwise, use the email’s date or current date. If the submission date seems to be in the email, make sure that the date extracted is related to the submission of the application (Looking for words like "submission" to be present), and nothing else. if you're not sure about the submission date, use the current date. Ensure that the date is also formatted as such: "full month name day, year" (e.g., "January 1, 2023").
-            3. Search all fields of the email for the company name and job title. If you cannot find the company name, return unknown for that field. If you cannot find the job title, return \"Software Engineer\" for that field.
-            4. Do NOT include code fences or extra text.
-        """
+            You are an AI assistant that extracts structured job application details from emails.
+
+            TASK:
+            Extract the following information and return ONLY valid JSON:
+            - "company": The company name
+            - "job_title": The job position title
+            - "submission_date": When the application was submitted
+
+            EXTRACTION RULES:
+
+            Company Name:
+            - Search all fields (subject, body, sender) for the company name
+            - If not found, return "unknown"
+
+            Job Title:
+            - Search all fields  (subject, body, sender) for the job title
+            - If not found, return "Software Engineer" as default
+
+            Submission Date:
+            - Look for dates explicitly related to application submission
+            - Keywords to look for: "submission", "submitted", "applied"
+            - If uncertain, use the email's date or current date
+            - Format: "full month name day, year" (e.g., "January 1, 2023")
+
+            OUTPUT:
+            - Return ONLY valid JSON, no code fences or extra text
+            - No markdown formatting or explanations
+         """
     ))
 
 
@@ -37,6 +59,6 @@ def extract_email_content(email: dict) -> dict:
     try:
         data = json.loads(content)
     except json.JSONDecodeError:
-        data = {"company": "", "job_title": "", "submission_date": date, "status": "Unknown"}
+        data = {"company": "unknown", "job_title": "Software Engineer", "submission_date": date, }
 
     return data

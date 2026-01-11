@@ -20,8 +20,7 @@ if cred_service_json:
 
 token_b64 = os.getenv('GMAIL_TOKEN_PKL_BASE64')
 if token_b64:
-    with open(cred_dir / 'token.pkl', 'wb') as f:
-        f.write(base64.b64decode(token_b64))
+    (cred_dir / 'token.pkl').write_bytes(base64.b64decode(token_b64))
 
 
 if __name__ == "__main__":

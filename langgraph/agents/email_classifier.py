@@ -12,8 +12,34 @@ def classify_email(email:dict) -> dict:
     body = email.get("body", "")[:1000]
 
     system_msg = SystemMessage(content=(
-        "You're an email assistant. Determine whether an email is about a job application, whether it is a new submission, or a status update from a previous submission. It can be the submission itself. As long as it is a job application I submitted. Do not consider emails that are about job offers, new positions openings or any other job-related topics. Focus only on the job application status and submissions.\n\n"
-        "Respond with JSON like: {\"is_job_application\": true/false, \"reason\": \"...\", \"status\": Applied/Interview-requested/Rejected}. For the  \"status\" key value pair, assign it \"applied\" if the email is about a new job application submission, and then \"interview-requested\" or \"rejected\" if the email is about a previous job application I submitted in the past. Remember to only use \"Applied\",\"Interview-request\", or \"Rejected \" for the status field and no other values! Please account for assessment requests, next step interviews, or offer updates under interview request. Do not add any other text"
+        "You're an email assistant. Your task is to classify emails related to MY job applications.\n\n"
+        
+        "INCLUDE:\n"
+        "- New job application submissions that I sent\n"
+        "- Status updates on previous applications I submitted\n"
+        "- The application submission itself\n\n"
+        
+        "EXCLUDE:\n"
+        "- Job offers or position openings from recruiters\n"
+        "- General job-related topics\n\n"
+        
+        "RESPONSE FORMAT:\n"
+        "Respond with JSON only, no additional text:\n"
+        '{{"is_job_application": true/false, "reason": "...", "status": "Applied/Interview-requested/Rejected"}}\n\n'
+        
+        "STATUS FIELD RULES:\n"
+        '- Use "Applied" for new job application submissions\n'
+        '- Use "Interview-requested" for:\n'
+        "  * Interview invitations\n"
+        "  * Assessment requests\n"
+        "  * Next step communications\n"
+        "  * Offer updates\n"
+        '- Use "Rejected" for rejection notifications\n'
+        '- Use "Unknown" if is_job_application is false\n'
+        "- No other values are allowed\n\n"
+        
+        "IMPORTANT:\n"
+        'If is_job_application is false, set reason to "Email is not about job application" and status to "Unknown"'
     ))
 
 

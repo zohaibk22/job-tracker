@@ -11,6 +11,10 @@ from typing_extensions import Annotated
 
 from publisher import EventPublisher
 
+from utils import init_sheet_client
+import os
+    
+
 # Step 1: Define each LangGraph-compatible node
 
 class GraphState(TypedDict, total=False):
@@ -33,9 +37,7 @@ def fetch_node(state) -> dict:
     print(f"Fetched {len(emails)} emails.")
 
     # Build sheet data cache once at the start
-    from utils import init_sheet_client
-    import os
-    
+  
     SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
     SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Sheet1")
     
