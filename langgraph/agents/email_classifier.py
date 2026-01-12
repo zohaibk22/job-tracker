@@ -55,7 +55,6 @@ def classify_email(email:dict) -> dict:
     response = llm.invoke([system_msg, user_msg])
     try:
         content = response.content
-        logger.info(f"Response content: {content}")
         
         # Strip markdown code blocks if present
         if isinstance(content, str) and content.startswith("```"):

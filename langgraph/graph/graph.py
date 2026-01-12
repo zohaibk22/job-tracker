@@ -84,8 +84,6 @@ def classify_node(state):
 
     result = classify_email(email)
 
-    logger.info(f"CLASSIFY NODE RESULT: {result}")
-
     return {
         **state,
         "email": email,
@@ -135,7 +133,6 @@ def update_status_node(state):
     logger.info('**************************** IN UPDATE STATUS NODE ****************************')
     sheet_cache = state.get('sheet_data_cache', None)
     publish_data = update_status_agent(state['job_info'], sheet_data_cache=sheet_cache)
-    logger.info(f"Update Status Result: {publish_data}")
     
     parsed_list = state.get("parsed_email_list", [])
     if parsed_list is None:
@@ -153,7 +150,6 @@ def publish_results(state):
     publisher = EventPublisher('email_notifications_channel')
     if 'parsed_email_list' not in state or state['parsed_email_list'] is None:
         state['parsed_email_list'] = []
-    logger.info(f"parsed_email_list: {state['parsed_email_list']}")
     logger.info(f"Total emails: {len(state['emails'])}")
     if len(state['parsed_email_list']) == 0:
         publisher.publish(json.dumps([{"message": "No emails found today."}]))

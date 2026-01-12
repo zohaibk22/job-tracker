@@ -60,9 +60,9 @@ def extract_email_content(email: dict) -> dict:
     content = response.content.strip()
 
     try:
-        logger.info(f"EXTRACTOR RESPONSE CONTENT: {content}")
         data = json.loads(content)
     except json.JSONDecodeError:
+        logger.error(f"❌ JSON decoding error. Response content: {content}")
         data = {"company": "unknown", "job_title": "Software Engineer", "submission_date": date, }
 
     return data

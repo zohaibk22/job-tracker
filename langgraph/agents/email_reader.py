@@ -1,6 +1,7 @@
 from utils.gmail_auth import get_gmail_service
 from datetime import datetime, timedelta
-
+import base64
+import email
 from zoneinfo import ZoneInfo
 import logging
 import os
@@ -9,11 +10,7 @@ logger = logging.getLogger(__name__)
 
 NY = ZoneInfo("America/New_York")
 
-email_results = os.getenv("MAX_RESULTS", 10)
-if isinstance(email_results, str) and email_results.isdigit():
-    email_results = int(email_results)
-else:
-    email_results = 10
+email_results = os.getenv("MAX_RESULTS", "10")
 
 
 def current_epoch_window(tz=NY):
@@ -30,7 +27,6 @@ def get_today_date_query():
 def fetch_today_emails(max_results=int(email_results)) -> list:
     service = get_gmail_service()
     query = get_today_date_query()
-    logger.info(f"Querying emails with query: {query}")
 
     results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=query, maxResults=max_results).execute()
     

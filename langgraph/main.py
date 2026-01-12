@@ -9,9 +9,12 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
+logger = logging.getLogger(__name__)
 
 def main():
     load_dotenv()
+   
+    logger.info("Starting the email processing graph...")
 
     graph = build_graph()
     graph.invoke({"status": "init"}, {"recursion_limit": 200})
